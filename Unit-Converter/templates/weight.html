@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="unit-converter.css">
     </head>
     <body>
-        <form action="/units" method="get">
+        <form action="{{ url_for('convert') }" method="get">
             <h1>Weight Converter</h1>
 
             <hr>
