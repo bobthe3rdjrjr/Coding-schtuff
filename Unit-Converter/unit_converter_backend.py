@@ -38,7 +38,7 @@ def Commandline_args():
     # Take in command line arguments
     argv = sys.argv
     if len(argv) != 4:
-        raise TypeError(f"Usage: python Unit Converter Backend.py <base_unit> <base_amt> <conversion_unit>")
+        raise TypeError(f"Usage: python unit_converter_backend.py <base_unit> <base_amt> <conversion_unit>")
 
     base_unit = argv[1].lower()
     base_amt = float(argv[2])
