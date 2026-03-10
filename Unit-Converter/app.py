@@ -31,8 +31,13 @@ def temperature():
     
 @app.route("/convert", methods=["get"])
 def convert():
-    pass    
-
+    pass
+    # Run through validity checker
+        # if valid
+            # Run through backend 
+            # return
+        # else
+            # return false through /valid
 
 if __name__ == "__main__":
     app.run(debug=True)
