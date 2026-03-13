@@ -1,6 +1,6 @@
 from unit_converter_backend import length_units, weight_units, temperature_units
 
-def validity_check(base_unit, base_amt, conversion_unit, correct_unit):
+def validity_check(correct_unit, base_unit, base_amt, conversion_unit):
     # Check correct_unit
     if correct_unit == "length":
         correct_unit == length_units

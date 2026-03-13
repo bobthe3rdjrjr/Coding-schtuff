@@ -3,27 +3,43 @@
 <html lang="en">
     <head>
         <meta name="author" content="Bob">
-        <meta name="description" content="Convert between different weight units">
+        <meta name="description" content="Convert between different {{unit}} units">
         <meta charset="UTF-8">
-        <title>Weight Converter</title>
+        <title>{{unit}} Converter</title>
         <link rel="stylesheet" href="unit-converter.css">
     </head>
     <body>
-        <form action="{{ url_for('convert') }" method="get">
-            <h1>Weight Converter</h1>
+        <form action="{{ url_for('process') }}" method="get">
+            <h1>{{unit}} Converter</h1>
 
             <hr>
+            
+            <label for="base_unit">Old unit</label>
+            <select name="base_unit" id="base_unit" required autofocus>
+                {% for option in options[unit] %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
 
-            <label for="base_unit">Old unit:</label>
-            <input type="text" name="base_unit" id="base_unit" placeholder="eg. kilogram" autocomplete="on" required autofocus>
             <br>
 
-            <label for="base_amt">Amount of unit:</label>
-            <input type="text" name="base_amt" id="base_amt" placeholder="eg. 10" autocomplete="on" required>
+            <label for="base_amt">Amount of unit</label>
+            <input type="text" name="base_amt" id="base_amt" placeholder="eg. 10" required>
+
             <br>
 
-            <label for="conversion_unit">New unit:</label>
-            <input type="text" name="conversion_unit" id="conversion_unit" placeholder="eg. pound" autocomplete="on" required> 
+            <label for="conversion_unit">New unit</label>
+            <select name="conversion_unit" id="conversion_unit" required autofocus>
+                {% for option in options[unit] %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+
+            <br>
+
+            <input type="hidden" name="correct_unit" value="{{unit}}">
+
+            <button type="submit">Submit</button>
         </form>
     </body>
 </html>
