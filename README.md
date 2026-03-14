@@ -1,1 +1,2 @@
-Hey! These are my personal coding projects, some are from roadmap.sh, some are stuff I found online, & some are just whatever. The individual folders with my projects will have their own readme's in them with actual instructions so have fun!
+Hey! These are my personal coding projects, some are from roadmap.sh, some are stuff I found online, & some are just whatever. The individual folders with my projects will have their own readme's in them with actual instructions so just check stuff out! Here are what all the projects I have do and other resources.
+
