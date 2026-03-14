@@ -19,7 +19,7 @@ def validity_check(correct_unit, base_unit, base_amt, conversion_unit):
     
     # Check base_amt
     try:
-        int(base_amt)
+        float(base_amt)
 
     except ValueError:
         return 2
