@@ -1,0 +1,1 @@
+Hey! These are my personal coding projects, some are from roadmap.sh, some are stuff I found online, & some are just whatever. The individual folders with my projects will have their own readme's in them so have fun!
