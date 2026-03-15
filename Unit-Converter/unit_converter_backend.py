@@ -41,8 +41,14 @@ def Commandline_args():
         raise TypeError(f"Usage: python unit_converter_backend.py <base_unit> <base_amt> <conversion_unit>")
 
     base_unit = argv[1].lower()
-    base_amt = float(argv[2])
     conversion_unit = argv[3].lower()
+
+    try:
+        base_amt = float(argv[2])
+
+    except ValueError:
+        raise ValueError("base_amt is not a valid float:", base_amt)
+    
 
     if not(
     base_unit not in length_units or
