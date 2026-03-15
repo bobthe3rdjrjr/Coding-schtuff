@@ -44,6 +44,3 @@ If you wish to run the backend by itself, you'll need to run it in terminal.
         * base_unit is the unit you are converting from 
         * base_amt is the amount of that unit
         * conversion_unit is the unit you are converting to 
-
-    * Errors
-    
