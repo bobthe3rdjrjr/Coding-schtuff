@@ -44,11 +44,6 @@ def process():
         new_unit = ConvertUnit(base_unit, int(base_amt), conversion_unit)
 
         return render_template("converter.html", new_unit=new_unit)
-        
-    
-    
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
