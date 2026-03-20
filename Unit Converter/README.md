@@ -22,7 +22,7 @@ Werkzeug - 3.1.6
     * (listed under requirements, just installing flask and python should be fine as flask installs the rest as dependencies)
 
 3. Run it 
-    * Run: `python app.py `
+    * Run: `python app.py`
 
 4. Open it
     * Open the localhost linked in terminal 
@@ -33,8 +33,10 @@ Werkzeug - 3.1.6
 If you wish to run the backend by itself, you'll need to run it in terminal.
 
 1. First clone this repo:
-    * In your chosen folder, run: `git clone https://github.com/bobthe3rdjrjr/Coding-schtuff.git`
-    * Then: `cd Coding-schtuff`
+    * In your chosen folder, run: 
+    ```git clone https://github.com/bobthe3rdjrjr/Coding-schtuff.git```
+    * Then: 
+    ```cd Coding-schtuff```
 
 2. Install Dependencies
     * You only need to install python from the official website

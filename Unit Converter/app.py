@@ -26,7 +26,6 @@ def converter(unit):
     
 @app.route("/process", methods=["get"])
 def process():
-    error_num = 0
     if len(request.args) != 4:
         raise Exception("lil bro why are you here???:", request.args, len(request.args))
     
@@ -38,8 +37,7 @@ def process():
         
         valid = validity_check(correct_unit, base_unit, base_amt, conversion_unit)
         if valid != 0:
-            error_num = 1
-            return render_template("converter.html", error_num=error_num)
+            return render_template("converter.html")
 
         new_unit = ConvertUnit(base_unit, int(base_amt), conversion_unit)
 

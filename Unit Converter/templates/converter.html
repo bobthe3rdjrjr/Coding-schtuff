@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="unit-converter.css">
     </head>
     <body>
-        {% if not error_num and not new_unit %}
+        {% if not new_unit %}
             <form action="{{ url_for('process') }}" method="get">
                 <h1>{{unit}} Converter</h1>
 
@@ -30,7 +30,7 @@
                 <br>
 
                 <label for="conversion_unit">New unit</label>
-                <select name="conversion_unit" id="conversion_unit" required autofocus>
+                <select name="conversion_unit" id="conversion_unit" required>
                     {% for option in options[unit] %}
                         <option value="{{ option }}">{{ option }}</option>
                     {% endfor %}
@@ -42,11 +42,6 @@
 
                 <button type="submit">Submit</button>
             </form>
-        {% elif error_num %}
-            {% if error_num == 1 %}
-                <h1>Invalid Number.</h1>
-                <h2>Please Reload Page and enter again.</h2>
-            {% endif %}
 
         {% else %}
             <h1>Converted!</h1>
@@ -55,7 +50,6 @@
 
             <p>Your converted unit is {{new_unit}}</p>
         {% endif %}
-
 
     </body>
 </html>
