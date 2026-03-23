@@ -44,4 +44,4 @@ def process():
         return render_template("converter.html", new_unit=new_unit)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
