@@ -1,9 +1,11 @@
-<<<<<<< HEAD
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-from flask_sqlalchemy import p
+from flask import request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_restful import reqparse, marshal_with, fields, abort
 from sqlalchemy import create_engine, select, String
 from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
+from functools import wraps
 import bcrypt
 import jwt
 import os
@@ -24,25 +26,10 @@ class UserModel(Base):
 
 # Create tables
 Base.metadata.create_all(db)
-=======
-from flask import Flask, render_template, jsonify, request, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import Mapped
-from flask_restful import Resource, Api, reqparse, marshal_with, fields, abort
-from datetime import datetime, timedelta, timezone
-from dotenv import load_dotenv
-from functools import wraps
-import jwt
-import os
 
 load_dotenv()
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 
 jwt_secret = os.environ.get("JWT_SECRET")
-
-db = SQLAlchemy(app)
-api = Api(app)
 
 class UserModel(db.Model):
     id: Mapped[int] = db.Column(db.Integer, primary_key=True)
@@ -51,7 +38,6 @@ class UserModel(db.Model):
 
     def __repr__(self):
         return f"User: {self.name}, Email: {self.email}"
->>>>>>> parent of 12dc244 (did some stuff)
 
 # Query using a session
 with Session(db) as session:
@@ -62,52 +48,6 @@ user_args.add_argument('name', type=str, required=True, help="Name is required")
 user_args.add_argument('password', type=str, required=True, help="Password is required")
 user_args.add_argument('email', type=str, required=True, help="Email is required")
 
-<<<<<<< HEAD
-def get():
-    users = db.session.execute(select(UserModel)).scalars().all()
-    return users
-    
-    
-def post():
-    args = user_args.parse_args()
-    user = UserModel(name=args["name"], email=args["email"], password=bcrypt.hashpw(args["password"].encode('utf-8'), bcrypt.gensalt()))
-    db.session.add(user)
-    db.session.commit()
-    users = db.session.execute(select(UserModel)).scalars().all()
-    return users, 201
-
-def get(id):
-    user = db.session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()
-    if not user:
-        raise RuntimeError("user dont exist")
-    return user
-    
-    
-def patch(id):
-    args = user_args.parse_args()
-    user = db.session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()
-    if not user:
-        raise RuntimeError("user dont exist")
-    user.name = args["name"]
-    user.password = args["password"]
-    user.email = args["email"]
-    db.session.commit()
-    return user
-    
-    
-def delete(id):
-    user = db.session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()
-    if not user:
-        raise RuntimeError("user dont exist")
-    db.session.delete(user)
-    db.session.commit()
-    users = db.session.execute(select(UserModel)).scalars().all()
-    return users, 204
-
-api.add_resource(User, '/users/<int:id>') # type: ignore # TODO: Replace
-api.add_resource(Users, "/users") # type: ignore # TODO: Replace
-
-=======
 user_fields = {
     'id': fields.Integer,
     'name': fields.String,
@@ -215,6 +155,4 @@ def auth():
 
 with app.app_context():
     db.create_all()  # Creates app.db and the users table if they don't exist
->>>>>>> parent of 12dc244 (did some stuff)
-
 
