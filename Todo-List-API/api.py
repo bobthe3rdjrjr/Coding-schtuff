@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
+from flask_sqlalchemy import p
 from sqlalchemy import create_engine, select, String
 from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
 import bcrypt
@@ -7,8 +8,7 @@ import jwt
 import os
 
 load_dotenv() 
-jwt_secret = os.environ.get("JWT_SECRET") # get it 
-
+jwt_secret = os.environ.get("JWT_SECRET") 
 db = create_engine("sqlite:///app.db")
 
 class Base(DeclarativeBase):
@@ -17,9 +17,9 @@ class Base(DeclarativeBase):
 class UserModel(Base):
     __tablename__ = "user_model"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(15), unique=True, nullable=False) # pyright: ignore[reportUndefinedVariable]
-    password: Mapped[str] = mapped_column(String(20), nullable=False) # pyright: ignore[reportUndefinedVariable]
-    email: Mapped[str] = mapped_column(String(50), nullable=False) # pyright: ignore[reportUndefinedVariable]
+    name: Mapped[str] = mapped_column(String(15), unique=True, nullable=False) 
+    password: Mapped[str] = mapped_column(String(20), nullable=False) 
+    email: Mapped[str] = mapped_column(String(50), nullable=False) 
 
 # Create tables
 Base.metadata.create_all(db)
