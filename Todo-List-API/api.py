@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from flask import request, jsonify, Flask
-from flask_sqlalchemy import SQLAlchemy, session
 from flask_restful import reqparse, marshal_with, fields, abort, Resource, Api
-from sqlalchemy import create_engine, select, String
+from sqlalchemy import create_engine, select, String, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from functools import wraps
 import bcrypt
@@ -47,6 +46,8 @@ user_fields = {
 }
 
 class Users(Resource):
+    method_decorators = [token_required]  # pyright: ignore[reportUndefinedVariable]
+
     @marshal_with(user_fields)  
     def get(self):
         with Session(engine) as session:
@@ -64,6 +65,8 @@ class Users(Resource):
         return users, 201
 
 class User(Resource):
+    method_decorators = [token_required]  # pyright: ignore[reportUndefinedVariable]
+
     @marshal_with(user_fields)
     def get(self, id):
         with Session(engine) as session:
@@ -98,6 +101,7 @@ class User(Resource):
             users = session.execute(select(UserModel)).scalars().all()
         return users, 204
 
+# TODO: Implement verification to check whether its the right user
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs): 
@@ -118,9 +122,6 @@ def token_required(func):
             return jsonify({'Alert':"Invalid Token"}), 401
         return func(*args, **kwargs)    
     return decorated
-
-api.add_resource(User, '/users/<int:id>')
-api.add_resource(Users, "/users")
 
 # Define routes:
 @app.route("/")
@@ -158,3 +159,57 @@ def nothome():
 if __name__ == "__main__":
     app.run(debug=True)
 
+# Todo List Model
+class TodoModel(Base):
+    __tablename__ = "todo_model"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id = Mapped[str] = mapped_column(ForeignKey("user_model.id"), nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+
+# TODO: Implement Pagination
+# Todo List CRUD
+class Todos(Resource):
+    method_decorators = [token_required]  # pyright: ignore[reportUndefinedVariable]
+
+    # get
+    @marshal_with(user_fields)
+    def get(self, id):
+        with Session(engine) as session:
+            todos = session.execute(select(TodoModel)).scalars().all()
+        return todos
+
+    # post
+    @marshal_with(user_fields)
+    def post(self):
+        args = user_args.parse_args
+        todo = TodoModel(title=args["title"], description=args["description"])
+        
+        with Session(engine) as session:
+            session.add(todo)
+            session.commit()
+            todos = session.execute(select(TodoModel)).scalars().all()
+        return todos, 201
+    
+class TodoEntry(Resource):
+    method_decorators = [token_required]  # pyright: ignore[reportUndefinedVariable]
+
+    # delete
+    def delete(self, id):
+        with Session(engine) as session:
+            entry = session.execute(select(TodoModel).where(id == id)).scalars().first()
+            session.add(entry)
+            session.commit()
+            todos = session.execute(select(TodoModel)).scalars.all()
+        return todos, 204
+
+    # put 
+    def put(self, id):
+        args = user_args.parse_args
+        title = args["title"]
+        description = args["description"]
+
+api.add_resource(User, '/users/<int:id>')
+api.add_resource(Users, "/users")
+api.add_resource(Todos, "/todos")
+api.add_resource(TodoEntry, "/todos/<int:id>")
