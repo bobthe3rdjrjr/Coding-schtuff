@@ -103,17 +103,19 @@ def token_required(func):
     def decorated(*args, **kwargs): 
         auth_header = request.headers.get('Authorization')
 
-        if not auth_header or not auth_header.startswith('Bearer '):
+        if not auth_header:
             return jsonify({"Alert!": 'Token is Missing. Go to /login to login or /users and then post your login. Remmeber to put the token into the Authorization header.'}), 401
+        elif not auth_header.startswith('Bearer '):
+            return jsonify({"Alert!": 'Token improper or corrupted. Missing bearer initialization.'}), 401
 
         token = auth_header.split(' ')[1]
         
         try:
             payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
-            return jsonify({"Alert":"Expired token. Please login again and use that token."})
+            return jsonify({"Alert":"Expired token. Please login again and use that token."}), 401
         except jwt.InvalidTokenError:
-            return jsonify({'Alert':"Invalid Token"})
+            return jsonify({'Alert':"Invalid Token"}), 401
         return func(*args, **kwargs)    
     return decorated
 
@@ -139,8 +141,8 @@ def login():
     if bcrypt.checkpw(bytes(data['password'], "utf-8"), user.password):
         token = jwt.encode({
             "user": user.name,
-            "email": data['email'],
-            "exp": datetime.now(timezone.utc) + timedelta(seconds=500),
+            "email": user.email,
+            "exp": datetime.now(timezone.utc) + timedelta(seconds=1800),
         },
         jwt_secret)
         return jsonify({"token": token})
