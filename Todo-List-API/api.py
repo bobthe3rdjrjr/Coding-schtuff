@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-from flask import request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_restful import reqparse, marshal_with, fields, abort
+from flask import request, jsonify, Flask
+from flask_sqlalchemy import SQLAlchemy, session
+from flask_restful import reqparse, marshal_with, fields, abort, Resource, Api
 from sqlalchemy import create_engine, select, String
-from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from functools import wraps
 import bcrypt
 import jwt
@@ -12,7 +12,9 @@ import os
 
 load_dotenv() 
 jwt_secret = os.environ.get("JWT_SECRET") 
-db = create_engine("sqlite:///app.db")
+engine = create_engine("sqlite:///app.db")
+app = Flask(__name__)
+api = Api(app)
 
 class Base(DeclarativeBase):
     pass
@@ -21,29 +23,18 @@ class UserModel(Base):
     __tablename__ = "user_model"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(15), unique=True, nullable=False) 
-    password: Mapped[str] = mapped_column(String(20), nullable=False) 
-    email: Mapped[str] = mapped_column(String(50), nullable=False) 
-
-# Create tables
-Base.metadata.create_all(db)
-
-load_dotenv()
-
-jwt_secret = os.environ.get("JWT_SECRET")
-
-class UserModel(db.Model):
-    id: Mapped[int] = db.Column(db.Integer, primary_key=True)
-    name: Mapped[str] = db.Column(db.String(15), unique=True, nullable=False)
-    email: Mapped[str] = db.Column(db.String(80), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(50), nullable=False) 
+    email: Mapped[str] = mapped_column(String(50), unique=True, nullable=False) 
 
     def __repr__(self):
-        return f"User: {self.name}, Email: {self.email}"
+        return f"Name: {self.name}, Email: {self.email}"
 
-# Query using a session
-with Session(db) as session:
-    users = session.execute(select(UserModel)).scalars().all()
+Base.metadata.create_all(engine)
 
-user_args = reqparse.RequestParser() # type: ignore # TODO: Replace
+load_dotenv()
+jwt_secret = os.environ.get("JWT_SECRET")
+
+user_args = reqparse.RequestParser() # TODO: Replace
 user_args.add_argument('name', type=str, required=True, help="Name is required")
 user_args.add_argument('password', type=str, required=True, help="Password is required")
 user_args.add_argument('email', type=str, required=True, help="Email is required")
@@ -58,22 +49,25 @@ user_fields = {
 class Users(Resource):
     @marshal_with(user_fields)  
     def get(self):
-        users = UserModel.query.all()
+        with Session(engine) as session:
+            users = session.execute(select(UserModel)).scalars().all()
         return users
     
     @marshal_with(user_fields)
     def post(self):
         args = user_args.parse_args()
-        user = UserModel(name=args["name"], email=args["email"])
-        db.session.add(user)
-        db.session.commit()
-        users = UserModel.query.all()
+        user = UserModel(name=args["name"], email=args["email"], password=bcrypt.hashpw(args["password"].encode('utf-8'), bcrypt.gensalt()))
+        with Session(engine) as session:
+            session.add(user)
+            session.commit()
+            users = session.execute(select(UserModel)).scalars().all()
         return users, 201
 
 class User(Resource):
     @marshal_with(user_fields)
     def get(self, id):
-        user = UserModel.query.filter_by(id=id).first()
+        with Session(engine) as session:
+            user = session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()
         if not user:
             abort(404)
         return user
@@ -81,78 +75,84 @@ class User(Resource):
     @marshal_with(user_fields)
     def patch(self, id):
         args = user_args.parse_args()
-        user = UserModel.query.filter_by(id=id).first()
+        with Session(engine) as session:
+            user = session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()     
         if not user:
             abort(404)
         user.name = args["name"]
         user.email = args["email"]
-        db.session.commit()
+        with Session(engine) as session:
+            session.commit()
         return user
     
     @marshal_with(user_fields)
     def delete(self, id):
-        user = UserModel.query.filter_by(id=id).first()
+        with Session(engine) as session:
+            user = session.execute(select(UserModel).where(UserModel.id == id)).scalars().first()
         if not user:
             abort(404)
-        db.session.delete(user)
-        db.session.commit()
-        users = UserModel.query.all()
+        
+        with Session(engine) as session:
+            session.delete(user)
+            session.commit()
+            users = session.execute(select(UserModel)).scalars().all()
         return users, 204
-
-api.add_resource(User, '/users/<int:id>')
-api.add_resource(Users, "/users")
 
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs): 
-        token = request.args.get('token')
-        if not token:
-            return jsonify({"Alert!": 'Token is Missing.'})
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"Alert!": 'Token is Missing. Go to /login to login or /users and then post your login. Remmeber to put the token into the Authorization header.'}), 401
+
+        token = auth_header.split(' ')[1]
         
         try:
             payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        except:
+        except jwt.ExpiredSignatureError:
+            return jsonify({"Alert":"Expired token. Please login again and use that token."})
+        except jwt.InvalidTokenError:
             return jsonify({'Alert':"Invalid Token"})
         return func(*args, **kwargs)    
     return decorated
 
+api.add_resource(User, '/users/<int:id>')
+api.add_resource(Users, "/users")
+
 # Define routes:
 @app.route("/")
 def home():
-    if not session.get("logged id"):
-        return render_template("login.html")
-    return render_template("home.html")
+    return "yo"
 
 # Login
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/login", methods=['POST'])
 def login():
-    if request.method == 'POST':
-        name = request.form['name']
-        pw = request.form['password']
-        if name and pw:
-            session['logged id'] = True
-            token = jwt.encode({
-                "user": request.form['name'],
-                "expiration": datetime.now(timezone.utc) + timedelta(seconds=500),
-            },
-            jwt_secret)
-            return jsonify({"token": token})
-        else:
-            return render_template("error.html", message="404, User Not Found")
-    else: 
-        return render_template("login.html")
+    data = request.get_json()
+    email = data['email']
 
-# Public
-@app.route("/register")
-def register():
-    return "For Public"
+    with Session(engine) as session:
+        user = session.execute(select(UserModel).where(email == email)).scalars().first()
+    if not user:
+        return jsonify("404, User not found")
+
+    if bcrypt.checkpw(bytes(data['password'], "utf-8"), user.password):
+        token = jwt.encode({
+            "user": user.name,
+            "email": data['email'],
+            "exp": datetime.now(timezone.utc) + timedelta(seconds=500),
+        },
+        jwt_secret)
+        return jsonify({"token": token})
+    else:
+        return jsonify(404)
 
 # Authenticated
-@app.route('/auth')
+@app.route('/home')
 @token_required
-def auth():
+def nothome():
     return "JWT is verified. Welcome to ya dashboard"
 
-with app.app_context():
-    db.create_all()  # Creates app.db and the users table if they don't exist
+if __name__ == "__main__":
+    app.run(debug=True)
 
