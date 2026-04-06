@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from flask import request, jsonify, Flask
-from flask_restful import reqparse, marshal_with, fields, abort, Resource, Api
-from sqlalchemy import create_engine, select, String, ForeignKey, and_
+from flask_restful import reqparse, marshal, marshal_with, fields, abort, Resource, Api
+from sqlalchemy import create_engine, select, String, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from functools import wraps
 import bcrypt
@@ -50,6 +50,11 @@ todo_args = reqparse.RequestParser()
 todo_args.add_argument("title", type=str, required=True, help="Please give a description for your todo item.")
 todo_args.add_argument("description", type=str, default="No description.")
 
+gettodo_args = reqparse.RequestParser()
+gettodo_args.add_argument("limit", type=int, default=10)
+gettodo_args.add_argument("filter", type=str, case_sensitive=False)
+gettodo_args.add_argument("page", type=int, default=0)
+
 user_fields = {
     'name': fields.String,
     'email': fields.String
@@ -80,11 +85,7 @@ def token_required(func):
         except jwt.InvalidTokenError:
             return {'Alert':"Invalid Token"}, 401
         
-        payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
-        try:
-            kwargs['current_user'] = payload['user']
-        except KeyError:
-            pass
+        kwargs['current_user'] = payload['user']
 
         return func(*args, **kwargs)
     return decorated
@@ -187,14 +188,47 @@ def nothome():
 class Todos(Resource):
     method_decorators = [token_required] 
 
-    @marshal_with(todo_fields)
     def get(self, current_user):
+        args = gettodo_args.parse_args()
+
         with Session(engine) as session:
+            applicable = session.execute(select(TodoModel).where(TodoModel.user_id == current_user)).scalars().all()
+            if args["filter"]:
+                filter: String = args["filter"]
+                titled = []
+                desc = []
+                for item in applicable:
+                    if filter in item.title.lower():
+                        titled.append(item)
+                    elif filter in item.description.lower():
+                        desc.append(item)
+                applicable = titled + desc
+
+        pages = []
+        count = -1
+        page = []
+        while 1:
+            count += 1
             try:
-                todos = session.execute(select(TodoModel).where(TodoModel.user_id == current_user)).scalars().all()
-            except:
-                return {"Alert!": "No todo's have been made."}
-            return todos
+                todo = applicable[count]
+            except IndexError:
+                pages.append(page)
+                break
+
+            page.append(todo)
+            if not len(page) % args["limit"]:
+                pages.append(page)
+                page = []
+
+        try: 
+            return {
+            "todos": marshal(pages[args["page"] - 1], todo_fields),
+            "pages": len(pages),
+            "limit": args["limit"]
+            }, 200
+        except IndexError:
+            return {"Alert!": f"Invalid page number."}, 422
+            
 
     @marshal_with(todo_fields)
     def post(self, current_user):
@@ -204,8 +238,9 @@ class Todos(Resource):
         with Session(engine) as session:
             session.add(todo)
             session.commit()
-            todos = session.execute(select(TodoModel).where(TodoModel.user_id == current_user)).scalars().all()
-            return todos, 201
+            session.refresh(todo)
+            session.expunge(todo)
+        return todo, 201
     
 class TodoEntry(Resource):
     method_decorators = [token_required] 
