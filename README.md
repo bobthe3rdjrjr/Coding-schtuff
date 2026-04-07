@@ -6,3 +6,12 @@ Hey! These are my personal coding projects, some are from roadmap.sh, some are s
     * Html for the frontend
     * Flask to link the two
     * css for dark mode
+
+* **Todo-List-API:** Second project, a simple api for a todo list which is also from roadmap.sh but I cant be bothered to link it, it uses:
+   * Python for like everything
+   * Flask to connect
+   * Uh thats all
+ 
+* **tmdb-cli tool** A simple project that uses request to call the tmdb [api](https://www.themoviedb.org/), uses:
+* Python
+* Requests (from pip)
