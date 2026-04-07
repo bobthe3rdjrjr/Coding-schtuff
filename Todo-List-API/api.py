@@ -277,4 +277,4 @@ api.add_resource(Todos, "/todos")
 api.add_resource(TodoEntry, "/todos/<int:id>")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
