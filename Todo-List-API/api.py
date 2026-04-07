@@ -81,9 +81,9 @@ def token_required(func):
         try:
             payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
-            return {"Alert":"Expired token. Please login again and use that token."}, 401
+            return {"Alert!":"Expired token. Please login again and use that token."}, 401
         except jwt.InvalidTokenError:
-            return {'Alert':"Invalid Token"}, 401
+            return {'Alert!':"Invalid Token"}, 401
         
         kwargs['current_user'] = payload['user']
 
@@ -227,7 +227,7 @@ class Todos(Resource):
             "limit": args["limit"]
             }, 200
         except IndexError:
-            return {"Alert!": f"Invalid page number."}, 422
+            return {"Alert!": "Invalid page number."}, 422
             
 
     @marshal_with(todo_fields)
@@ -245,7 +245,6 @@ class Todos(Resource):
 class TodoEntry(Resource):
     method_decorators = [token_required] 
 
-    @marshal_with(todo_fields)
     def delete(self, id, current_user):
         with Session(engine) as session:
             entry = session.execute(select(TodoModel).where(TodoModel.id == id)).scalars().first()
@@ -255,8 +254,7 @@ class TodoEntry(Resource):
                 return {"Alert!": "Forbidden"}, 403
             session.delete(entry)
             session.commit()
-            todos = session.execute(select(TodoModel).where(TodoModel.user_id == current_user)).scalars().all()
-            return todos, 204
+            return 204
 
     @marshal_with(todo_fields)
     def put(self, id, current_user):
