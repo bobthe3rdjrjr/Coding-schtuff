@@ -13,5 +13,5 @@ Hey! These are my personal coding projects, some are from roadmap.sh, some are s
    * Uh thats all
  
 * **tmdb-cli tool** A simple project that uses request to call the tmdb [api](https://www.themoviedb.org/), uses:
-* Python
-* Requests (from pip)
+   * Python
+   * Requests (from pip)
