@@ -12,6 +12,6 @@ Hey! These are my personal coding projects, some are from roadmap.sh, some are s
    * Flask to connect
    * Uh thats all
  
-* **tmdb-cli tool** A simple project that uses request to call the tmdb [api](https://www.themoviedb.org/), uses:
+* **tmdb-cli tool** A simple project from [roadmap.sh](https://roadmap.sh/projects/tmdb-cli) that uses request to call the tmdb [api](https://www.themoviedb.org/), uses:
    * Python
    * Requests (from pip)
